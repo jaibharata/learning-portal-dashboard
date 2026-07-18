@@ -1,0 +1,1004 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Developer Learning Portal</title>
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- Anti-FOUC script for system theme detection and local storage settings -->
+  <script>
+    {
+      const colorScheme = localStorage.getItem("color-scheme");
+      if (colorScheme && colorScheme !== 'system') {
+        document.documentElement.style.setProperty('color-scheme', colorScheme);
+      }
+    }
+  </script>
+</head>
+<body>
+
+  <!-- Sidebar Navigation -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <svg viewBox="0 0 24 24"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zM12 6v6l4 2"/></svg>
+      </div>
+      <span class="sidebar-title">DevPortal</span>
+    </div>
+
+    <!-- User Profile Level Area -->
+    <div class="sidebar-profile">
+      <div class="profile-info">
+        <div class="profile-avatar">SB</div>
+        <div class="profile-details">
+          <span class="profile-name">Sachin Bhat</span>
+          <span class="profile-role">AI Apprentice</span>
+        </div>
+      </div>
+      <div class="xp-container">
+        <div class="xp-label">
+          <span>Level 3</span>
+          <span id="sidebar-xp-label">XP: 450/1000</span>
+        </div>
+        <div class="xp-bar">
+          <div class="xp-progress" id="sidebar-xp-progress"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation List Links -->
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">Tracks</div>
+      <a href="#dashboard" class="nav-link active" id="nav-dashboard">
+        <svg viewBox="0 0 24 24"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+        <span>Dashboard</span>
+      </a>
+      <!-- Dynamic category tracks render here -->
+      <div id="sidebar-tracks-container" style="display:flex; flex-direction:column; gap:2px;"></div>
+      <a href="#rate-limiter" class="nav-link" id="nav-rate-limiter">
+        <svg viewBox="0 0 24 24"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M22 12H2M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        <span>System Design Sims</span>
+      </a>
+      <a href="#sprint-board" class="nav-link" id="nav-sprint-board">
+        <svg viewBox="0 0 24 24"><path d="M3 3h18v18H3zM9 3v18M15 3v18"/></svg>
+        <span>Sprint Board</span>
+      </a>
+
+      <div class="nav-section-title">Personal</div>
+      <a href="#journal" class="nav-link" id="nav-journal">
+        <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2zM22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+        <span>Daily Journal</span>
+      </a>
+      <a href="#resources" class="nav-link" id="nav-resources">
+        <svg viewBox="0 0 24 24"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+        <span>Resources</span>
+      </a>
+      <a href="#progress" class="nav-link" id="nav-progress">
+        <svg viewBox="0 0 24 24"><path d="M3 3v18h18M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg>
+        <span>Progress Tracker</span>
+      </a>
+    </nav>
+
+    <!-- Theme Toggler Bottom Menu -->
+    <div class="sidebar-footer">
+      <button class="theme-toggle-btn" id="theme-toggle-btn">
+        <svg viewBox="0 0 24 24" id="theme-toggle-icon"></svg>
+        <span id="theme-toggle-text">Theme Toggle</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Area Workspace -->
+  <div class="main-wrapper">
+    
+    <!-- Top Header Bar -->
+    <header class="top-header">
+      <button class="hamburger-btn" id="hamburger-btn" aria-label="Toggle Sidebar">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      
+      <!-- Interactive Global Search bar with overlay results dropdown -->
+      <div class="search-container">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" class="search-input" id="search-input" placeholder="Search modules, simulator, sprint board...">
+        <div class="search-overlay-results" id="search-results"></div>
+      </div>
+
+      <!-- Streaks and Badges area -->
+      <div class="header-actions">
+        <div class="streak-badge">
+          <span>🔥</span>
+          <span>5 Day Streak</span>
+        </div>
+        <button class="notification-btn" aria-label="Notifications">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <div class="notification-dot"></div>
+        </button>
+      </div>
+    </header>
+
+    <!-- Content Pages Wrapper -->
+    <main class="content-area">
+      
+      <!-- ================= PAGE 1: DASHBOARD ================= -->
+      <div class="view-pane active" id="view-dashboard">
+        <h1 class="page-title">Welcome Back!</h1>
+        <p class="page-subtitle">Your personalized learning dashboard. Check your progress and tasks.</p>
+        
+        <!-- Metrics Cards grid row -->
+        <div class="grid-3">
+          
+          <!-- Focus Module Card -->
+          <div class="card">
+            <div class="card-header" style="justify-content: space-between; align-items: center; gap: 8px;">
+              <h3 class="card-title" style="margin:0;">
+                <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                Current Focus
+              </h3>
+              <select id="focus-category-select" style="font-size:0.75rem; border:1px solid var(--border-color); border-radius:4px; padding:2px 6px; background:var(--bg-app); color:var(--text-primary); cursor:pointer; font-weight:600; outline:none; max-width:130px;" title="Switch Focused Saga"></select>
+            </div>
+            <div class="focus-widget">
+              <div class="progress-circle-container">
+                <svg class="progress-circle-svg" viewBox="0 0 100 100">
+                  <circle class="progress-circle-bg" cx="50" cy="50" r="40"/>
+                  <circle class="progress-circle-val" id="focus-progress-circle" cx="50" cy="50" r="40"/>
+                </svg>
+                <div class="progress-circle-percentage" id="focus-progress-label">0%</div>
+              </div>
+              <div>
+                <h4 id="focus-title" style="font-weight: 600; font-size: 0.95rem;">AI Engineering</h4>
+                <p id="focus-subtitle" style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px;">LLMs, LangGraph & Prompt Playgrounds</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Overall Completion Card -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14M22 4 12 14.01l-3-3"/></svg>
+                Overall Progress
+              </h3>
+            </div>
+            <div class="stat-number" id="overall-progress-num">0<span class="stat-unit">%</span></div>
+            <div class="stat-desc" id="cards-completed-text">0 of 0 topics completed</div>
+          </div>
+
+          <!-- Streak widget -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                Study Streak
+              </h3>
+              <span class="badge badge-green">Active</span>
+            </div>
+            <div class="stat-number">5<span class="stat-unit">days</span></div>
+            <div class="stat-desc">Next milestone in 2 days (Reward: +100XP)</div>
+          </div>
+        </div>
+
+        <div class="grid-sidebar-layout">
+          <!-- Left Main Body inside Dashboard -->
+          <div style="display: flex; flex-direction: column; gap: 24px; min-width: 0;">
+            
+            <!-- Dynamic Roadmap Goals -->
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">
+                  <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4M21 12a9 9 0 1 1-9-9"/></svg>
+                  Custom Roadmap Goals
+                </h3>
+                <span class="badge badge-purple">Flexible Board</span>
+              </div>
+              
+              <!-- Dynamic Categories lists mount here -->
+              <div id="dynamic-roadmap-container" style="max-width: 100%; overflow: hidden;"></div>
+              
+              <!-- Administrative Category Creator -->
+              <div class="roadmap-mgmt-card">
+                <h4 class="roadmap-mgmt-title">Manage Study Boards</h4>
+                <div class="roadmap-mgmt-row">
+                  <input type="text" class="modal-input" placeholder="New Category (e.g. System Design)..." id="new-cat-title-input" style="flex:1; padding:8px 12px; font-size:0.85rem; border-radius:6px;">
+                  <button class="btn btn-primary" id="add-cat-btn" style="padding:8px 16px; border-radius:6px; font-size:0.85rem;">Create Board</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Future Pages Section for Planned Expansion -->
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">
+                  <svg viewBox="0 0 24 24"><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg>
+                  Future Pages & Extensions
+                </h3>
+              </div>
+              <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:14px;">Future roadmap templates to build out when building the final application bundle:</p>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
+                <div style="padding:12px; border: 1px dashed var(--border-color); border-radius: 8px;">
+                  <h4 style="font-size:0.85rem; font-weight:600; margin-bottom:4px;">🔑 Interview Qs</h4>
+                  <p style="font-size:0.75rem; color:var(--text-secondary);">Interactive mock questions and flashcards loader.</p>
+                </div>
+                <div style="padding:12px; border: 1px dashed var(--border-color); border-radius: 8px;">
+                  <h4 style="font-size:0.85rem; font-weight:600; margin-bottom:4px;">🏗️ Architecture Notes</h4>
+                  <p style="font-size:0.75rem; color:var(--text-secondary);">Deep dive architectural case studies and diagrams.</p>
+                </div>
+                <div style="padding:12px; border: 1px dashed var(--border-color); border-radius: 8px;">
+                  <h4 style="font-size:0.85rem; font-weight:600; margin-bottom:4px;">🔖 Bookmarks & Links</h4>
+                  <p style="font-size:0.75rem; color:var(--text-secondary);">Browser extensions to sync saved URLs dynamically.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Sidebar inside Dashboard -->
+          <div style="display: flex; flex-direction: column; gap: 24px;">
+            
+            <!-- Sprint Kanban Dashboard Mini Summary -->
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">
+                  <svg viewBox="0 0 24 24"><path d="M3 3h18v18H3zM9 3v18M15 3v18"/></svg>
+                  Active Sprint Tasks
+                </h3>
+                <span class="badge badge-purple" style="cursor:pointer;" onclick="window.location.hash='#sprint-board'">Sprint Board</span>
+              </div>
+              <div class="sprint-summary-grid">
+                <div class="sprint-summary-item" style="border-top: 3px solid var(--text-muted);">
+                  <div style="font-size:0.65rem; color:var(--text-secondary); text-transform:uppercase;">To Do</div>
+                  <div class="sprint-summary-count" id="mini-todo-count">0</div>
+                </div>
+                <div class="sprint-summary-item" style="border-top: 3px solid var(--warning);">
+                  <div style="font-size:0.65rem; color:var(--text-secondary); text-transform:uppercase;">Started</div>
+                  <div class="sprint-summary-count" id="mini-inprogress-count">0</div>
+                </div>
+                <div class="sprint-summary-item" style="border-top: 3px solid var(--success);">
+                  <div style="font-size:0.65rem; color:var(--text-secondary); text-transform:uppercase;">Done</div>
+                  <div class="sprint-summary-count" id="mini-done-count">0</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick TODO Card -->
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">
+                  <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 14l2 2 4-4"/></svg>
+                  Today's TODO
+                </h3>
+                <span class="badge badge-yellow" id="todo-count">0 remaining</span>
+              </div>
+              <div class="todo-input-row" style="display:flex; gap:8px; margin-bottom: 12px;">
+                <input type="text" class="modal-input" id="todo-new-input" placeholder="Add study task..." style="flex:1; border-radius: 6px; font-size:0.85rem; padding: 8px 12px;">
+                <select id="todo-expiry-select" class="modal-input" style="width:105px; border-radius:6px; padding:8px; font-size:0.8rem; background:var(--bg-app); border:1px solid var(--border-color); color:var(--text-primary); cursor:pointer; font-weight:600;" title="Task Expiry Time">
+                  <option value="1">Expire in 1d</option>
+                  <option value="3">Expire in 3d</option>
+                  <option value="0" selected>Never Expire</option>
+                </select>
+                <button class="btn btn-primary" id="todo-add-btn" style="padding: 8px 16px; border-radius: 6px; font-size:0.85rem;">Add</button>
+              </div>
+              <div class="todo-list-container" id="todo-list"></div>
+            </div>
+
+            <!-- Recent Journals Summary Widget -->
+            <div class="card">
+              <div class="card-header">
+                <h3 class="card-title">
+                  <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5v-15z"/></svg>
+                  Recent Reflections
+                </h3>
+              </div>
+              <div id="dash-recent-journals"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= PAGE 2: AI ENGINEERING ================= -->
+      <div class="view-pane" id="view-ai-engineering">
+        <h1 class="page-title">AI Engineering Path</h1>
+        <p class="page-subtitle">Learn LLM operations, prompt development, RAG systems, and agentic workflows.</p>
+
+        <!-- Course Banner -->
+        <div class="card" style="background: linear-gradient(135deg, var(--bg-card) 0%, rgba(99, 102, 241, 0.05) 100%); margin-bottom: 24px; border-color: rgba(99, 102, 241, 0.25);">
+          <div style="max-width: 700px;">
+            <span class="badge badge-blue" style="margin-bottom: 12px;">Active Track</span>
+            <h2 style="font-weight: 800; font-size:1.4rem; margin-bottom: 10px;">Mastering LLMs & Agentic Networks</h2>
+            <p style="font-size:0.9rem; color:var(--text-secondary); line-height: 1.5; margin-bottom: 16px;">This track builds skills from core foundation APIs up to multi-agent orchestrations. Complete each module by fulfilling checkpoints, then test your systems using the prompt playground.</p>
+          </div>
+        </div>
+
+        <div class="grid-sidebar-layout">
+          <!-- Accordion Learning Modules -->
+          <div>
+            
+            <!-- Module 1 -->
+            <div class="accordion-module expanded">
+              <div class="accordion-trigger">
+                <div class="accordion-header-left">
+                  <span class="badge badge-blue">Module 1</span>
+                  <div class="accordion-title-area">
+                    <span class="accordion-title">LLM Foundations & Core API</span>
+                    <span class="accordion-meta">
+                      <span style="font-size: 0.75rem; color: var(--text-secondary);">🔥 High Priority</span>
+                    </span>
+                  </div>
+                </div>
+                <svg class="accordion-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+              </div>
+              <div class="accordion-content">
+                <div class="accordion-body-inner">
+                  <p class="accordion-desc">Master client-side API integrations, configuring temperature, top_p, penalty rates, and streaming token tokens directly inside frontend client applications.</p>
+                  
+                  <h4 style="font-size: 0.85rem; font-weight:600; color: var(--text-secondary); margin-bottom: 10px;">SAMPLE CODE (STREAMING INFERENCE):</h4>
+                  <pre><code>async function streamInference(prompt) {
+  const response = await fetch('/api/llm/stream', {
+    method: 'POST',
+    body: JSON.stringify({ prompt })
+  });
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    const chunk = decoder.decode(value);
+    console.log(chunk);
+  }
+}</code></pre>
+                  <div id="ai-track-mount-llm"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Module 2 -->
+            <div class="accordion-module">
+              <div class="accordion-trigger">
+                <div class="accordion-header-left">
+                  <span class="badge badge-purple">Module 2</span>
+                  <div class="accordion-title-area">
+                    <span class="accordion-title">Advanced Prompt Engineering</span>
+                    <span class="accordion-meta">
+                      <span style="font-size: 0.75rem; color: var(--text-secondary);">💡 Core Tech</span>
+                    </span>
+                  </div>
+                </div>
+                <svg class="accordion-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+              </div>
+              <div class="accordion-content">
+                <div class="accordion-body-inner">
+                  <p class="accordion-desc">Study logical structure frameworks for prompts: Few-Shot, Chain-of-Thought (CoT), Self-Consistency, and ReAct prompting loops to improve model outputs.</p>
+                  <div id="ai-track-mount-prompt"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Module 3 -->
+            <div class="accordion-module">
+              <div class="accordion-trigger">
+                <div class="accordion-header-left">
+                  <span class="badge badge-green">Module 3</span>
+                  <div class="accordion-title-area">
+                    <span class="accordion-title">Stateful Agents & LangGraph</span>
+                    <span class="accordion-meta">
+                      <span style="font-size: 0.75rem; color: var(--text-secondary);">🧩 Complex Graphing</span>
+                    </span>
+                  </div>
+                </div>
+                <svg class="accordion-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+              </div>
+              <div class="accordion-content">
+                <div class="accordion-body-inner">
+                  <p class="accordion-desc">Design cyclic networks with LangGraph where agent output nodes link recursively based on router decisions.</p>
+                  <div id="ai-track-mount-langgraph"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Module 4 -->
+            <div class="accordion-module">
+              <div class="accordion-trigger">
+                <div class="accordion-header-left">
+                  <span class="badge badge-purple">Module 4</span>
+                  <div class="accordion-title-area">
+                    <span class="accordion-title">CrewAI Multi-Agents</span>
+                    <span class="accordion-meta">
+                      <span style="font-size: 0.75rem; color: var(--text-secondary);">🚀 Collaborative AI</span>
+                    </span>
+                  </div>
+                </div>
+                <svg class="accordion-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+              </div>
+              <div class="accordion-content">
+                <div class="accordion-body-inner">
+                  <p class="accordion-desc">Orchestrate collaborative teams of AI agents with specialized roles, task assignments, and inter-agent communication channels using the CrewAI framework.</p>
+                  <div id="ai-track-mount-crewai"></div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Prompt Playground Mock (Right Column) -->
+          <div>
+            <div class="card" style="position: sticky; top: 90px;">
+              <div class="card-header">
+                <h3 class="card-title">
+                  <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16zM3.27 6.96 12 12.01l8.73-5.05M12 22.08V12"/></svg>
+                  Prompt Sandbox
+                </h3>
+                <span class="badge badge-yellow">Gemini Mock</span>
+              </div>
+              <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:12px;">Test your prompt concepts directly inside the sandbox template.</p>
+              
+              <div class="playground-container">
+                <div class="playground-row">
+                  <label class="playground-label" for="sys-prompt-input">System Instruction</label>
+                  <textarea class="playground-input" id="sys-prompt-input" placeholder="You are an expert AI software engineer guiding a student..."></textarea>
+                </div>
+                <div class="playground-row">
+                  <label class="playground-label" for="user-prompt-input">User Input</label>
+                  <textarea class="playground-input" id="user-prompt-input" placeholder="Tell me about LangGraph..." style="min-height: 45px;"></textarea>
+                </div>
+                <button class="playground-btn" id="playground-run-btn" style="width: 100%;">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m5 3 14 9-14 9V3z"/></svg>
+                  Run Simulation
+                </button>
+              </div>
+
+              <div style="margin-top: 16px;">
+                <div class="playground-label" style="margin-bottom:6px;">Model Response Stream:</div>
+                <div class="playground-output-box" id="playground-output" style="max-height: 180px; overflow-y: auto;">
+                  <span style="color:var(--text-muted);">Response will stream here once you run the simulation.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= DYNAMIC CATEGORY PATHS DETAILS PANE ================= -->
+      <div class="view-pane" id="view-category-details">
+        <!-- Dynamic Category contents are compiled and rendered here by script.js -->
+      </div>
+
+      <!-- ================= PAGE 3: SYSTEM DESIGN VISUALIZER SANDBOX ================= -->
+      <div class="view-pane" id="view-rate-limiter">
+        <h1 class="page-title">System Design Sandbox</h1>
+        <p class="page-subtitle">Simulate microservice architectures in real-time. Choose a concept to start, or build a custom simulator.</p>
+        
+        <!-- Concept tabs row -->
+        <div class="sprint-selector-header" style="margin-bottom:16px;">
+          <div class="sprint-tabs-container" id="visualizer-tabs-list">
+            <button class="sprint-tab-btn active" data-concept="rate-limiter">Rate Limiter</button>
+            <button class="sprint-tab-btn" data-concept="load-balancer">Load Balancer</button>
+            <button class="sprint-tab-btn" data-concept="lru-cache">LRU Cache</button>
+            <button class="sprint-tab-btn" data-concept="db-replication">DB Replication</button>
+          </div>
+        </div>
+
+        <!-- Curriculum Epic Attachment & Generic Simulation Generator -->
+        <div class="card" style="margin-bottom: 24px; border-left: 4px solid var(--accent); background: linear-gradient(135deg, var(--bg-card) 0%, rgba(168, 85, 247, 0.03) 100%); padding: 20px;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px;">
+            <div style="flex: 2; min-width: 280px; display:flex; flex-direction:column; gap:8px;">
+              <h4 style="font-weight: 800; font-size: 0.95rem; margin: 0; color: var(--text-primary); display:flex; align-items:center; gap:6px;">
+                <span>🔗 Curriculum Epic Connection</span>
+              </h4>
+              <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0;">Link this Sandbox to any Epic module to seed simulations from study guides and track metrics.</p>
+              <select id="sandbox-epic-selector" class="modal-input" style="padding:8px 12px; font-size:0.85rem; border-radius:6px; background:var(--bg-app); border:1px solid var(--border-color); color:var(--text-primary); cursor:pointer; width:100%; max-width:420px;"></select>
+            </div>
+            
+            <div style="flex: 1; min-width: 220px; display:flex; flex-direction:column; gap:8px; align-items:flex-start;">
+              <h4 style="font-weight: 700; font-size: 0.85rem; margin: 0; color: var(--text-secondary);">Simulation Engine Template</h4>
+              <div style="display:flex; gap:8px; width:100%;">
+                <select id="sandbox-type-selector" class="modal-input" style="flex:1; padding:8px 12px; font-size:0.85rem; border-radius:6px; background:var(--bg-app); border:1px solid var(--border-color); color:var(--text-primary); cursor:pointer;">
+                  <option value="rate-limiter">Token Bucket Rate Limiter</option>
+                  <option value="load-balancer">Load Balancer Router</option>
+                  <option value="lru-cache">Redis Cache-Aside Visualizer</option>
+                  <option value="db-replication">Database Replication Master-Replica</option>
+                  <option value="kafka">Kafka Partition Balance Stream</option>
+                  <option value="ai-prompt">AI Prompt Sandbox Pipeline</option>
+                  <option value="flowchart">Interactive Flowchart Visualizer</option>
+                </select>
+                <button type="button" class="btn btn-primary" id="sandbox-generate-sim-btn" style="border-radius:6px; font-size:0.85rem; font-weight:700; background:linear-gradient(135deg, var(--primary), var(--accent)); border:none; display:flex; align-items:center; gap:4px; height:38px;">
+                  ⚡ Generate
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dynamic Visualizer Mount Point -->
+        <div class="card" style="margin-bottom: 24px;" id="visualizer-sandbox-wrapper">
+          <div id="visualizer-sandbox-container"></div>
+        </div>
+      </div>
+
+      <!-- ================= PAGE 4: DAILY JOURNAL ================= -->
+      <div class="view-pane" id="view-journal">
+        <h1 class="page-title">Daily Study Journal</h1>
+        <p class="page-subtitle">Log your learnings, blocks, and reflection diaries. Persists automatically in your browser.</p>
+
+        <div class="journal-layout">
+          <!-- Journal history sidebar list -->
+          <div class="journal-sidebar">
+            <button class="btn btn-primary" id="journal-new-btn" style="width: 100%; justify-content: center; border-radius: 8px;">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+              New Entry
+            </button>
+            
+            <div class="card" style="padding:16px;">
+              <h4 style="font-size:0.75rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase; margin-bottom:12px; letter-spacing:0.05em;">History Logs</h4>
+              <div class="journal-list" id="journal-list"></div>
+            </div>
+          </div>
+
+          <!-- Journal Editor Workspace -->
+          <div class="card">
+            <div class="journal-editor-container">
+              
+              <!-- Mood / Productivity selection tags row -->
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <label style="font-size: 0.8rem; font-weight:600; color: var(--text-secondary);">Reflective State</label>
+                <div class="journal-tags-select">
+                  <button class="journal-tag-btn" data-tag="focused">⚡ Focused</button>
+                  <button class="journal-tag-btn" data-tag="productive">🌱 Productive</button>
+                  <button class="journal-tag-btn" data-tag="struggling">🪵 Blocked</button>
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px;">
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <label style="font-size: 0.8rem; font-weight:600; color: var(--text-secondary);" for="journal-title">Title</label>
+                  <input type="text" class="journal-input-title" id="journal-title" placeholder="What are you learning today?">
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <label style="font-size: 0.8rem; font-weight:600; color: var(--text-secondary);" for="journal-hours">Hours Studied</label>
+                  <input type="number" step="0.5" min="0" class="journal-input-title" id="journal-hours" placeholder="e.g. 2">
+                </div>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <label style="font-size: 0.8rem; font-weight:600; color: var(--text-secondary);" for="journal-body">Learning Log</label>
+                <textarea class="journal-input-body" id="journal-body" placeholder="Write details about the algorithms, tools, issues encountered..."></textarea>
+              </div>
+
+              <div class="journal-actions">
+                <span style="font-size: 0.75rem; color: var(--text-secondary); align-self: center;" id="journal-status-indicator">Auto-saves as you type...</span>
+                <button class="btn btn-primary" id="journal-save-btn">Save Entry</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= PAGE 5: RESOURCES ================= -->
+      <div class="view-pane" id="view-resources">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+          <div>
+            <h1 class="page-title">Study Resources</h1>
+            <p class="page-subtitle">A curated catalog of books, papers, courses, and articles for AI and System Design.</p>
+          </div>
+          <button class="btn btn-primary" id="resource-add-btn" style="border-radius: 8px;">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+            Add Bookmark
+          </button>
+        </div>
+
+        <!-- Resources categories tabs -->
+        <div class="resources-tabs" id="resources-tabs">
+          <button class="resource-tab-btn active" data-cat="all">All</button>
+          <button class="resource-tab-btn" data-cat="ai">AI Engineering</button>
+          <button class="resource-tab-btn" data-cat="system-design">System Design</button>
+          <button class="resource-tab-btn" data-cat="backend">Backend & DB</button>
+        </div>
+
+        <!-- Resource items grid -->
+        <div class="resources-grid" id="resources-grid"></div>
+      </div>
+
+      <!-- ================= PAGE 6: PROGRESS TRACKER ================= -->
+      <div class="view-pane" id="view-progress">
+        <h1 class="page-title">Your Progress & Analytics</h1>
+        <p class="page-subtitle">View your metrics, study hours chart, and contribution matrices.</p>
+
+        <!-- Stats details row -->
+        <div class="grid-3">
+          <div class="card">
+            <h4 style="font-size:0.8rem; font-weight:700; color:var(--text-secondary); margin-bottom:8px; text-transform:uppercase;">Overall Completion</h4>
+            <div class="progress-container" style="margin-top:0;">
+              <div class="progress-info">
+                <span id="prog-page-overall-label">0%</span>
+              </div>
+              <div class="progress-track" style="height:12px;">
+                <div class="progress-fill" id="prog-page-overall-fill"></div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card">
+            <h4 style="font-size:0.8rem; font-weight:700; color:var(--text-secondary); margin-bottom:8px; text-transform:uppercase;">AI Engineering Path</h4>
+            <div class="progress-container" style="margin-top:0;">
+              <div class="progress-info">
+                <span id="prog-page-ai-label">0%</span>
+              </div>
+              <div class="progress-track" style="height:12px;">
+                <div class="progress-fill" id="prog-page-ai-fill"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h4 style="font-size:0.8rem; font-weight:700; color:var(--text-secondary); margin-bottom:8px; text-transform:uppercase;">System Design Path</h4>
+            <div class="progress-container" style="margin-top:0;">
+              <div class="progress-info">
+                <span id="prog-page-sd-label">0%</span>
+              </div>
+              <div class="progress-track" style="height:12px;">
+                <div class="progress-fill" id="prog-page-sd-fill"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-sidebar-layout">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <svg viewBox="0 0 24 24"><path d="M3 3v18h18M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg>
+                Weekly Activity
+              </h3>
+              <span class="badge badge-blue">Hours of Study</span>
+            </div>
+            <p style="font-size:0.85rem; color:var(--text-secondary);">Tracking your study duration logs across the last 7 days.</p>
+            
+            <div class="chart-container" id="progress-chart-container"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                Activity Map
+              </h3>
+            </div>
+            <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:16px;">Daily log frequency map:</p>
+            
+            <div class="streak-grid" id="activity-map-grid"></div>
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:var(--text-secondary); margin-top:16px;" id="activity-map-summary">
+              <span>🔥 0 days active this month</span>
+              <span>Streak: 0 days</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= PAGE 7: SPRINT KANBAN BOARD ================= -->
+      <div class="view-pane" id="view-sprint-board">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; flex-wrap: wrap; gap:16px;">
+          <div>
+            <h1 class="page-title">Sprint Kanban Board</h1>
+            <p class="page-subtitle">Track and prioritize Jira-like learning tasks using active sprint stages.</p>
+          </div>
+          <div style="display:flex; gap:10px;">
+            <button class="btn btn-secondary" id="new-sprint-btn" style="border-radius: 8px;">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+              New Sprint
+            </button>
+            <button class="btn btn-primary" id="task-create-btn" style="border-radius: 8px;">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+              Create Task
+            </button>
+          </div>
+        </div>
+        <!-- Sprint Selection Tab Row -->
+        <div class="sprint-selector-header" style="margin-bottom:12px;">
+          <div class="sprint-tabs-container" id="sprint-tabs-list"></div>
+        </div>
+
+        <!-- Jira Epics Board Tracker Roll-up Panel -->
+        <div id="kanban-epics-summary" style="margin-bottom: 24px; display: flex; gap: 16px; overflow-x: auto; flex-wrap: wrap; padding-bottom: 8px;"></div>
+
+        <!-- Kanban Board layout grid columns -->
+        <div class="kanban-board-container">
+          
+          <!-- Column 1: Todo -->
+          <div class="kanban-column" data-status="todo">
+            <div class="kanban-column-header">
+              <span>TO DO</span>
+              <span class="kanban-column-badge" id="header-count-todo">0</span>
+            </div>
+            <div class="kanban-cards-list" id="kanban-list-todo"></div>
+          </div>
+
+          <!-- Column 2: In Progress -->
+          <div class="kanban-column" data-status="in-progress">
+            <div class="kanban-column-header" style="border-bottom-color: var(--warning);">
+              <span>IN PROGRESS</span>
+              <span class="kanban-column-badge" id="header-count-inprogress" style="background-color: var(--warning-glow); color: var(--warning);">0</span>
+            </div>
+            <div class="kanban-cards-list" id="kanban-list-inprogress"></div>
+          </div>
+
+          <!-- Column 3: Done -->
+          <div class="kanban-column" data-status="done">
+            <div class="kanban-column-header" style="border-bottom-color: var(--success);">
+              <span>DONE</span>
+              <span class="kanban-column-badge" id="header-count-done" style="background-color: var(--success-glow); color: var(--success);">0</span>
+            </div>
+            <div class="kanban-cards-list" id="kanban-list-done"></div>
+          </div>
+
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Bookmark add resource popup Modal Overlay -->
+  <div class="modal-overlay" id="resource-modal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 class="modal-title">Add Resource Bookmark</h3>
+        <button class="modal-close-btn" id="modal-close" aria-label="Close modal">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      
+      <div class="modal-body">
+        <div class="modal-input-group">
+          <label class="modal-label" for="modal-res-title">Resource Title</label>
+          <input type="text" class="modal-input" id="modal-res-title" placeholder="e.g. Designing Data-Intensive Applications">
+        </div>
+        
+        <div class="modal-input-group">
+          <label class="modal-label" for="modal-res-desc">Description Summary</label>
+          <input type="text" class="modal-input" id="modal-res-desc" placeholder="e.g. Deep dive into building large-scale systems...">
+        </div>
+
+        <div class="modal-input-group">
+          <label class="modal-label" for="modal-res-author">Author / Provider</label>
+          <input type="text" class="modal-input" id="modal-res-author" placeholder="e.g. Martin Kleppmann">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="modal-input-group">
+            <label class="modal-label" for="modal-res-cat">Category</label>
+            <select class="modal-select" id="modal-res-cat">
+              <option value="ai">AI Engineering</option>
+              <option value="system-design">System Design</option>
+              <option value="backend">Backend & DB</option>
+            </select>
+          </div>
+          
+          <div class="modal-input-group">
+            <label class="modal-label" for="modal-res-type">Resource Type</label>
+            <select class="modal-select" id="modal-res-type">
+              <option value="book">Book</option>
+              <option value="course">Course</option>
+              <option value="article">Article / Link</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="modal-input-group">
+          <label class="modal-label" for="modal-res-url">Target URL (Link)</label>
+          <input type="text" class="modal-input" id="modal-res-url" placeholder="https://...">
+        </div>
+      </div>
+
+      <div class="journal-actions" style="border-top: 1px solid var(--border-color); padding-top: 16px;">
+        <button class="btn btn-secondary" id="modal-cancel" onclick="document.getElementById('resource-modal').classList.remove('active')">Cancel</button>
+        <button class="btn btn-primary" id="modal-save-btn">Add Bookmark</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sprint Task Dialog Modal Overlay -->
+  <div class="modal-overlay" id="task-modal">
+    <div class="modal-container" style="max-width: 500px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="task-modal-title">Create Sprint Task</h3>
+        <button class="modal-close-btn" id="task-modal-close" aria-label="Close modal">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      
+      <div class="modal-body">
+        <div class="modal-input-group">
+          <label class="modal-label" for="task-input-title">Task Title</label>
+          <input type="text" class="modal-input" id="task-input-title" placeholder="e.g. Implement Token Bucket visualizer">
+        </div>
+        
+        <div class="modal-input-group">
+          <label class="modal-label" for="task-input-desc">Description</label>
+          <textarea class="playground-input" id="task-input-desc" placeholder="Details about this task..." style="min-height: 80px;"></textarea>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="modal-input-group">
+            <label class="modal-label" for="task-input-cat">Category (Saga) Mapping</label>
+            <select class="modal-select" id="task-input-cat"></select>
+          </div>
+          
+          <div class="modal-input-group">
+            <label class="modal-label" for="task-input-epic">Epic (Module) Mapping</label>
+            <select class="modal-select" id="task-input-epic"></select>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;">
+          <div class="modal-input-group">
+            <label class="modal-label" for="task-input-priority">Priority</label>
+            <select class="modal-select" id="task-input-priority">
+              <option value="low">Low</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="modal-input-group">
+            <label class="modal-label" for="task-input-estimate">Story Points Estimate</label>
+            <select class="modal-select" id="task-input-estimate">
+              <option value="1">1 SP</option>
+              <option value="2">2 SP</option>
+              <option value="3">3 SP</option>
+              <option value="5">5 SP</option>
+              <option value="8">8 SP</option>
+            </select>
+          </div>
+          
+          <div class="modal-input-group">
+            <label class="modal-label" for="task-input-sprint">Sprint Target</label>
+            <select class="modal-select" id="task-input-sprint"></select>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;">
+          <div class="modal-input-group">
+            <label class="modal-label" for="task-input-logged-hours">Actual Logged Hours</label>
+            <input type="number" class="modal-input" id="task-input-logged-hours" min="0" step="0.5" placeholder="e.g. 2.5">
+          </div>
+          
+          <div class="modal-input-group">
+            <label class="modal-label" for="task-input-status">Status Column</label>
+            <select class="modal-select" id="task-input-status">
+              <option value="todo">To Do</option>
+              <option value="in-progress">In Progress</option>
+              <option value="done">Done</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="journal-actions" style="border-top: 1px solid var(--border-color); padding-top: 16px;">
+        <button class="btn btn-secondary delete" id="task-delete-btn" style="background-color: var(--danger-glow); color: var(--danger); margin-right: auto; display:none;">Delete Task</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('task-modal').classList.remove('active')">Cancel</button>
+        <button class="btn btn-primary" id="task-save-btn">Save Task</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TOPIC NOTES & DETAIL MODAL ================= -->
+  <div class="modal-overlay" id="topic-notes-modal">
+    <div class="modal-container" style="max-width: 520px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="topic-notes-title">Topic Study Guide</h3>
+        <button class="modal-close-btn" id="topic-notes-close" aria-label="Close modal">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" style="display:flex; flex-direction:column; gap:16px;">
+        <!-- Status Completion -->
+        <div style="display:flex; align-items:center; gap:10px;">
+          <label class="custom-checkbox">
+            <input type="checkbox" id="topic-notes-completed">
+            <span class="checkbox-mark"></span>
+          </label>
+          <span style="font-weight:600; font-size:0.9rem;">Mark this topic checkpoint as Completed</span>
+        </div>
+
+        <!-- Completion Percentage Slider -->
+        <div class="control-group" style="margin-top:-6px;">
+          <label class="control-label" style="display:flex; justify-content:space-between; margin-bottom: 4px;">
+            <span>Completion Percentage</span>
+            <span id="topic-notes-percent-val" style="font-weight:700; color:var(--primary);">0%</span>
+          </label>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <input type="range" id="topic-notes-percent-slider" min="0" max="100" step="10" style="flex:1; accent-color:var(--primary); height:6px; border-radius:3px; background:var(--border-color); border:none; outline:none; cursor:pointer;">
+          </div>
+        </div>
+        <!-- AI Cheat Sheet generator banner -->
+        <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(99, 102, 241, 0.05); border:1px solid rgba(99, 102, 241, 0.2); border-radius:8px; padding:10px; margin-top:4px;">
+          <span style="font-size:0.75rem; color:var(--text-secondary);">Need a quick overview? Generate notes automatically.</span>
+          <button class="btn btn-secondary" id="topic-notes-ai-btn" style="padding:6px 12px; font-size:0.75rem; border-color:rgba(99, 102, 241, 0.4); color:var(--primary);">✨ AI Notes</button>
+        </div>
+
+        <!-- Notes Textarea -->
+        <div class="control-group">
+          <label class="control-label" for="topic-notes-textarea">Study Notes & Outline</label>
+          <textarea class="modal-textarea" id="topic-notes-textarea" placeholder="Write key concepts, code templates, or API calls here..." style="min-height: 150px; font-family: var(--font-sans); line-height:1.5; font-size:0.85rem; padding:10px; border-radius:6px; background:var(--bg-app); border:1px solid var(--border-color); color:var(--text-primary);"></textarea>
+        </div>
+
+        <!-- External reference links -->
+        <div class="control-group">
+          <label class="control-label" for="topic-notes-links">Documentation References & URL Link</label>
+          <input type="text" class="modal-input" id="topic-notes-links" placeholder="e.g. https://langchain.com, https://kafka.apache.org" style="font-size:0.8rem; padding:8px 12px; border-radius:6px;">
+        </div>
+
+      </div>
+      <div class="journal-actions" style="border-top: 1px solid var(--border-color); padding-top: 16px; margin-top: 12px;">
+        <button class="btn btn-secondary" id="topic-notes-cancel">Cancel</button>
+        <button class="btn btn-primary" id="topic-notes-save">Save Notes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Calendar Log Modal -->
+  <div class="modal" id="calendar-modal">
+    <div class="modal-card" style="max-width: 460px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="calendar-modal-title">Activity Log</h3>
+        <button type="button" class="modal-close" id="calendar-modal-close" style="background:none; border:none; color:var(--text-secondary); font-size:1.5rem; cursor:pointer;">×</button>
+      </div>
+      <div class="modal-body" style="display:flex; flex-direction:column; gap:16px;">
+        <!-- Date indicator -->
+        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 4px;" id="calendar-modal-date-label"></div>
+        
+        <!-- Existing logs list -->
+        <div id="calendar-existing-logs-container" style="display:none; background:rgba(0,0,0,0.15); border:1px solid var(--border-color); border-radius:6px; padding:12px; max-height: 150px; overflow-y: auto;">
+          <div style="font-size:0.7rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase; margin-bottom:6px; border-bottom:1px solid var(--border-color); padding-bottom:2px;">Logged Sessions</div>
+          <div id="calendar-existing-logs" style="display:flex; flex-direction:column; gap:6px;"></div>
+        </div>
+        
+        <!-- Quick Log Form -->
+        <div style="border-top: 1px dashed var(--border-color); padding-top: 12px; display: flex; flex-direction: column; gap: 12px;">
+          <h4 style="font-size: 0.82rem; font-weight: 700; color: var(--accent); margin: 0;">Log Hours for this Day</h4>
+          
+          <div class="modal-input-group">
+            <label class="modal-label" for="calendar-log-cat">Saga Category</label>
+            <select class="modal-select" id="calendar-log-cat" style="width:100%; padding:8px; border-radius:6px; background:var(--bg-app); border:1px solid var(--border-color); color:var(--text-primary);"></select>
+          </div>
+          
+          <div class="modal-input-group">
+            <label class="modal-label" for="calendar-log-topic">Epic Module</label>
+            <select class="modal-select" id="calendar-log-topic" style="width:100%; padding:8px; border-radius:6px; background:var(--bg-app); border:1px solid var(--border-color); color:var(--text-primary);"></select>
+          </div>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="modal-input-group">
+              <label class="modal-label" for="calendar-log-hours">Study Hours</label>
+              <input type="number" step="0.5" min="0.5" class="modal-input" id="calendar-log-hours" placeholder="e.g. 1.5" style="width:100%; padding:8px; border-radius:6px; background:var(--bg-app); border:1px solid var(--border-color); color:var(--text-primary);">
+            </div>
+            
+            <div class="modal-input-group">
+              <label class="modal-label" for="calendar-log-tags">Tags</label>
+              <select class="modal-select" id="calendar-log-tags" style="width:100%; padding:8px; border-radius:6px; background:var(--bg-app); border:1px solid var(--border-color); color:var(--text-primary);">
+                <option value="focused">Focused</option>
+                <option value="productive">Productive</option>
+                <option value="revision">Revision</option>
+                <option value="practice">Practice</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="modal-input-group">
+            <label class="modal-label" for="calendar-log-note">Brief Reflection Note</label>
+            <textarea class="modal-input" id="calendar-log-note" placeholder="Write a short summary of what you studied..." style="width:100%; padding:8px; border-radius:6px; background:var(--bg-app); border:1px solid var(--border-color); color:var(--text-primary); min-height: 50px; resize: vertical;"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="journal-actions" style="border-top: 1px solid var(--border-color); padding-top: 16px; margin-top: 12px; display:flex; justify-content:flex-end; gap:8px;">
+        <button type="button" class="btn btn-secondary" id="calendar-modal-cancel">Close</button>
+        <button type="button" class="btn btn-primary" id="calendar-modal-save">Save Log</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js?v=3"></script>
+</body>
+</html>
