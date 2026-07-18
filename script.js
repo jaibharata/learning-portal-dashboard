@@ -4307,6 +4307,9 @@ function setupSimulator() {
       renderGeneric();
     }
   }
+
+  window.renderVisualizerTabs = renderVisualizerTabs;
+  window.renderActiveVisualizer = renderActiveVisualizer;
 }
 
 // 11. LLM Playground Interactive Mock
