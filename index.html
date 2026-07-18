@@ -939,11 +939,11 @@
   </div>
 
   <!-- Calendar Log Modal -->
-  <div class="modal" id="calendar-modal">
-    <div class="modal-card" style="max-width: 460px;">
+  <div class="modal-overlay" id="calendar-modal">
+    <div class="modal-container" style="max-width: 460px;">
       <div class="modal-header">
         <h3 class="modal-title" id="calendar-modal-title">Activity Log</h3>
-        <button type="button" class="modal-close" id="calendar-modal-close" style="background:none; border:none; color:var(--text-secondary); font-size:1.5rem; cursor:pointer;">×</button>
+        <button type="button" class="modal-close-btn" id="calendar-modal-close" aria-label="Close modal">×</button>
       </div>
       <div class="modal-body" style="display:flex; flex-direction:column; gap:16px;">
         <!-- Date indicator -->
@@ -992,7 +992,7 @@
           </div>
         </div>
       </div>
-      <div class="journal-actions" style="border-top: 1px solid var(--border-color); padding-top: 16px; margin-top: 12px; display:flex; justify-content:flex-end; gap:8px;">
+      <div class="journal-actions" style="border-top: 1px solid var(--border-color); padding-top: 16px; margin-top: 12px; display:flex; justify-content:flex-end; gap:12px; width:100%;">
         <button type="button" class="btn btn-secondary" id="calendar-modal-cancel">Close</button>
         <button type="button" class="btn btn-primary" id="calendar-modal-save">Save Log</button>
       </div>
