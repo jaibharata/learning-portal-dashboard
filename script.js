@@ -2625,6 +2625,7 @@ function setupSimulator() {
       <button class="sprint-tab-btn ${state.visualizer.activeConcept === 'kafka' ? 'active' : ''}" data-concept="kafka">Kafka Partitioning</button>
       <button class="sprint-tab-btn ${state.visualizer.activeConcept === 'ai-prompt' ? 'active' : ''}" data-concept="ai-prompt">AI Prompt Sandbox</button>
       <button class="sprint-tab-btn ${state.visualizer.activeConcept === 'flowchart' ? 'active' : ''}" data-concept="flowchart">Interactive Flowchart</button>
+      <button class="sprint-tab-btn ${state.visualizer.activeConcept === 'node-event-loop' ? 'active' : ''}" data-concept="node-event-loop">Node.js Event Loop</button>
     `;
     
     state.visualizer.customConcepts.forEach(name => {
@@ -2687,6 +2688,9 @@ function setupSimulator() {
     } else if (concept === 'flowchart') {
       sandboxContainer.innerHTML = attachmentBanner + getFlowchartSimulationHtml(topic);
       initializeFlowchartSimulation(topic.id, topic.text);
+    } else if (concept === 'node-event-loop') {
+      sandboxContainer.innerHTML = attachmentBanner + getNodeEventLoopHtml();
+      initNodeEventLoopHandlers();
     } else if (concept.startsWith('custom-')) {
       const conceptName = state.visualizer.customConcepts.find(name => {
         const cleanId = 'custom-' + name.toLowerCase().replace(/\s+/g, '-');
@@ -2696,6 +2700,476 @@ function setupSimulator() {
       sandboxContainer.innerHTML = attachmentBanner + getCustomSimHtml(conceptName);
       initCustomSimHandlers(conceptName);
     }
+  }
+
+  // ==========================================
+  // 8. NODE.JS EVENT LOOP & LIBUV SUB-SIMULATOR
+  // ==========================================
+  function getNodeEventLoopHtml() {
+    return `
+      <div class="node-sim-container" style="display:flex; flex-direction:column; gap:20px; color:var(--text-primary);">
+        <!-- Header controls -->
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; background:rgba(255,255,255,0.02); padding:16px; border:1px solid var(--border-color); border-radius:10px;">
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button type="button" class="btn btn-primary" id="btn-node-http" style="background:linear-gradient(135deg, var(--primary), var(--accent)); font-size:0.8rem; border:none; display:flex; align-items:center; gap:6px;">
+              🌐 Outbound HTTP Call
+            </button>
+            <button type="button" class="btn btn-primary" id="btn-node-fs" style="background:var(--accent); font-size:0.8rem; border:none; display:flex; align-items:center; gap:6px;">
+              📂 Async File I/O (fs)
+            </button>
+            <button type="button" class="btn btn-primary" id="btn-node-crypto" style="background:var(--badge-yellow); color:#000; font-size:0.8rem; border:none; display:flex; align-items:center; gap:6px;">
+              🔑 CPU Crypto Hash
+            </button>
+            <button type="button" class="btn btn-secondary" id="btn-node-clear" style="font-size:0.8rem; display:flex; align-items:center; gap:6px;">
+              🗑️ Reset Sim
+            </button>
+          </div>
+          <div style="display:flex; align-items:center; gap:16px;">
+            <label style="font-size:0.8rem; display:flex; align-items:center; gap:6px; color:var(--text-secondary);">
+              Speed: 
+              <select id="node-sim-speed" style="background:var(--bg-app); border:1px solid var(--border-color); color:var(--text-primary); padding:4px 8px; border-radius:4px; font-size:0.8rem; cursor:pointer;">
+                <option value="1200">Normal (1.2s)</option>
+                <option value="600">Fast (0.6s)</option>
+                <option value="2500">Slow (2.5s)</option>
+              </select>
+            </label>
+            <button type="button" class="btn btn-secondary" id="btn-node-auto" style="font-size:0.8rem;">
+              ▶️ Auto-Inject Traffic
+            </button>
+          </div>
+        </div>
+
+        <!-- Grid Visualization Layout -->
+        <div style="display:grid; grid-template-columns: 1.1fr 1fr; gap:20px; min-height:420px; flex-wrap:wrap;">
+          
+          <!-- Left Column: Single-Threaded Runtime -->
+          <div style="display:flex; flex-direction:column; gap:16px; border:1px solid var(--border-color); border-radius:12px; padding:16px; background:rgba(255,255,255,0.01);">
+            <h3 style="font-size:0.9rem; font-weight:800; border-bottom:1px solid var(--border-color); padding-bottom:8px; margin:0; display:flex; align-items:center; gap:6px; color:var(--text-primary);">
+              <span style="color:var(--primary); font-size:0.7rem;">●</span> Single-Threaded JS Engine (V8 Runtime)
+            </h3>
+            
+            <div style="display:grid; grid-template-columns: 1.1fr 1fr; gap:16px; flex:1;">
+              <!-- Call Stack -->
+              <div style="background:rgba(0,0,0,0.15); border:1px solid var(--border-color); border-radius:8px; padding:12px; display:flex; flex-direction:column;">
+                <div style="font-size:0.7rem; font-weight:700; color:var(--text-secondary); margin-bottom:8px; display:flex; justify-content:space-between; text-transform:uppercase;">
+                  <span>📥 CALL STACK</span>
+                  <span id="node-stack-status" style="color:var(--text-muted); font-size:0.65rem;">Idle</span>
+                </div>
+                <div id="node-call-stack" style="display:flex; flex-direction:column-reverse; gap:6px; flex:1; justify-content:flex-start; min-height:180px; background:rgba(0,0,0,0.25); border-radius:6px; padding:10px; border:1px solid rgba(255,255,255,0.02);">
+                  <!-- Stack frames mount here dynamically -->
+                </div>
+              </div>
+
+              <!-- Event Loop Ring -->
+              <div style="background:rgba(0,0,0,0.15); border:1px solid var(--border-color); border-radius:8px; padding:12px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                <div style="font-size:0.7rem; font-weight:700; color:var(--text-secondary); margin-bottom:12px; width:100%; text-align:left; text-transform:uppercase;">🔄 Event Loop (libuv)</div>
+                
+                <div style="position:relative; width:120px; height:120px; border-radius:50%; border:3px dashed rgba(168, 85, 247, 0.25); display:flex; align-items:center; justify-content:center;" id="node-event-loop-circle">
+                  <!-- Event Loop rotating pointer -->
+                  <div id="node-event-loop-spinner" style="position:absolute; width:100%; height:100%; border-radius:50%; border-top:3px solid var(--accent); transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); transform: rotate(0deg);"></div>
+                  <div style="text-align:center; font-size:0.65rem; font-weight:800; color:var(--text-primary); z-index:2; line-height:1.2;">
+                    EVENT LOOP<br>
+                    <span id="node-loop-phase" style="font-size:0.58rem; color:var(--accent); font-weight:bold; letter-spacing:0.5px;">POLL</span>
+                  </div>
+                </div>
+                <div style="font-size:0.62rem; color:var(--text-muted); text-align:center; margin-top:12px; line-height:1.3;">Checks callback queue & triggers Call Stack execution.</div>
+              </div>
+            </div>
+
+            <!-- Callback / Task Queue -->
+            <div style="background:rgba(0,0,0,0.15); border:1px solid var(--border-color); border-radius:8px; padding:12px;">
+              <div style="font-size:0.7rem; font-weight:700; color:var(--text-secondary); margin-bottom:8px; text-transform:uppercase; display:flex; justify-content:space-between;">
+                <span>📋 CALLBACK QUEUE (Macro/Micro Tasks)</span>
+                <span id="node-queue-count" style="color:var(--text-muted); font-size:0.65rem;">0 Items</span>
+              </div>
+              <div id="node-callback-queue" style="display:flex; gap:8px; min-height:54px; background:rgba(0,0,0,0.25); border-radius:6px; padding:8px; overflow-x:auto; align-items:center; border:1px solid rgba(255,255,255,0.02);">
+                <!-- Callbacks wait here -->
+                <div style="color:var(--text-muted); font-size:0.7rem; width:100%; text-align:center;">Queue is empty</div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Right Column: Asynchronous Concurrency Layers -->
+          <div style="display:flex; flex-direction:column; gap:16px; border:1px solid var(--border-color); border-radius:12px; padding:16px; background:rgba(255,255,255,0.01);">
+            <h3 style="font-size:0.9rem; font-weight:800; border-bottom:1px solid var(--border-color); padding-bottom:8px; margin:0; display:flex; align-items:center; gap:6px; color:var(--text-primary);">
+              <span style="color:var(--accent); font-size:0.7rem;">●</span> Non-Blocking Delegate Layer (OS & libuv)
+            </h3>
+
+            <!-- OS Network Sockets (epoll / kqueue) -->
+            <div style="background:rgba(0,0,0,0.15); border:1px solid var(--border-color); border-radius:8px; padding:12px; flex:1; display:flex; flex-direction:column;">
+              <div style="font-size:0.7rem; font-weight:700; color:var(--text-primary); margin-bottom:4px; display:flex; justify-content:space-between; align-items:center; text-transform:uppercase;">
+                <span>🌐 OS Network Stack (Sockets)</span>
+                <span style="font-size:0.6rem; color:#10b981; font-weight:800; background:rgba(16,185,129,0.08); padding:2px 6px; border-radius:4px;">No Threads (Asynchronous OS Kernel)</span>
+              </div>
+              <div style="font-size:0.68rem; color:var(--text-secondary); margin-bottom:10px;">Handles outbound network connections (`http.request`) without consuming Node.js threads.</div>
+              <div id="node-os-sockets" style="display:flex; flex-direction:column; gap:6px; flex:1; background:rgba(0,0,0,0.25); border-radius:6px; padding:8px; min-height:76px; justify-content:center; border:1px solid rgba(255,255,255,0.02);">
+                <div style="color:var(--text-muted); font-size:0.7rem; text-align:center;" id="node-no-sockets">No active network socket connections</div>
+              </div>
+            </div>
+
+            <!-- Libuv Worker Thread Pool -->
+            <div style="background:rgba(0,0,0,0.15); border:1px solid var(--border-color); border-radius:8px; padding:12px; flex:1; display:flex; flex-direction:column;">
+              <div style="font-size:0.7rem; font-weight:700; color:var(--text-primary); margin-bottom:4px; display:flex; justify-content:space-between; align-items:center; text-transform:uppercase;">
+                <span>🧵 Libuv Worker Threads</span>
+                <span style="font-size:0.6rem; color:var(--accent); font-weight:800; background:rgba(168,85,247,0.08); padding:2px 6px; border-radius:4px;">ThreadPool (Size: 4)</span>
+              </div>
+              <div style="font-size:0.68rem; color:var(--text-secondary); margin-bottom:10px;">Executes blocking operations (File system operations `fs.*`, cryptography hashes, compression).</div>
+              <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:8px; flex:1; min-height:80px;" id="node-thread-pool">
+                <!-- 4 Thread Workers -->
+                <div class="thread-worker" id="node-worker-1" style="background:rgba(0,0,0,0.3); border:1px solid var(--border-color); border-radius:6px; padding:6px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; font-size:0.65rem; transition:border-color 0.2s;">
+                  <div style="font-weight:800; color:var(--text-secondary);">Worker #1</div>
+                  <div class="worker-task" style="color:var(--text-muted); font-size:0.58rem; text-align:center;">Idle</div>
+                </div>
+                <div class="thread-worker" id="node-worker-2" style="background:rgba(0,0,0,0.3); border:1px solid var(--border-color); border-radius:6px; padding:6px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; font-size:0.65rem; transition:border-color 0.2s;">
+                  <div style="font-weight:800; color:var(--text-secondary);">Worker #2</div>
+                  <div class="worker-task" style="color:var(--text-muted); font-size:0.58rem; text-align:center;">Idle</div>
+                </div>
+                <div class="thread-worker" id="node-worker-3" style="background:rgba(0,0,0,0.3); border:1px solid var(--border-color); border-radius:6px; padding:6px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; font-size:0.65rem; transition:border-color 0.2s;">
+                  <div style="font-weight:800; color:var(--text-secondary);">Worker #3</div>
+                  <div class="worker-task" style="color:var(--text-muted); font-size:0.58rem; text-align:center;">Idle</div>
+                </div>
+                <div class="thread-worker" id="node-worker-4" style="background:rgba(0,0,0,0.3); border:1px solid var(--border-color); border-radius:6px; padding:6px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; font-size:0.65rem; transition:border-color 0.2s;">
+                  <div style="font-weight:800; color:var(--text-secondary);">Worker #4</div>
+                  <div class="worker-task" style="color:var(--text-muted); font-size:0.58rem; text-align:center;">Idle</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- Terminal Output Log -->
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; background:rgba(0,0,0,0.15); padding:16px; border:1px solid var(--border-color); border-radius:12px;">
+          <!-- Log stream -->
+          <div style="display:flex; flex-direction:column; gap:6px;">
+            <div style="font-size:0.7rem; font-weight:800; color:var(--text-secondary); display:flex; justify-content:space-between; text-transform:uppercase;">
+              <span>📟 Process Terminal Console</span>
+              <button type="button" id="btn-node-clear-console" style="background:none; border:none; color:var(--primary); cursor:pointer; font-size:0.65rem; font-weight:700;">Clear Output</button>
+            </div>
+            <div id="node-console" style="background:#05050a; font-family:var(--font-mono); font-size:0.7rem; line-height:1.45; padding:10px; border-radius:6px; height:150px; overflow-y:auto; border:1px solid var(--border-color); color:#a78bfa;">
+              <div style="color:var(--text-muted);">Simulator ready. Click Outbound HTTP, Async File, or CPU Crypto to trigger execution ticks.</div>
+            </div>
+          </div>
+          
+          <!-- Tutorial Panel -->
+          <div style="display:flex; flex-direction:column; justify-content:center; gap:8px; padding-left:16px; border-left:1px dashed var(--border-color);">
+            <h4 style="font-size:0.8rem; font-weight:800; color:var(--primary); margin:0; text-transform:uppercase;">Node.js Single-Threaded Architecture Mechanics</h4>
+            <div style="font-size:0.72rem; color:var(--text-secondary); line-height:1.45; display:flex; flex-direction:column; gap:4px;">
+              <div>• <strong>Main Thread & Call Stack:</strong> Executing blocking CPU computations here locks the server. To keep the server fast, heavy tasks are delegated.</div>
+              <div>• <strong>HTTP Network Sockets:</strong> Outbound requests are delegated directly to the OS kernel stack (epoll/kqueue). They consume 0 threads, which is how Node.js scale-handles millions of requests.</div>
+              <div>• <strong>Libuv Worker Threads:</strong> Thread pools execute blocking system APIs (like DNS or File I/O) asynchronously, keeping the main thread free.</div>
+              <div>• <strong>Event Loop cycles:</strong> Checks callback queues and pulls completions back into the Call Stack for immediate processing.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function initNodeEventLoopHandlers() {
+    let simState = {
+      pendingTasks: [],
+      callStack: [],
+      callbackQueue: [],
+      activeSockets: [],
+      activeWorkers: [null, null, null, null],
+      tickInterval: null,
+      isAutoInjecting: false,
+      autoInjectInterval: null,
+      simSpeed: 1200,
+      eventLoopAngle: 0,
+      eventLoopPhases: ['POLL', 'CHECK', 'CLOSE', 'TIMER', 'PENDING'],
+      eventLoopPhaseIndex: 0
+    };
+
+    const logToSim = (msg, color = 'var(--text-primary)') => {
+      const consoleDiv = document.getElementById('node-console');
+      if (!consoleDiv) return;
+      const timeStr = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      const logItem = document.createElement('div');
+      logItem.style.color = color;
+      logItem.innerHTML = `<span style="color:var(--text-muted); font-weight:normal;">[${timeStr}]</span> ${msg}`;
+      consoleDiv.appendChild(logItem);
+      consoleDiv.scrollTop = consoleDiv.scrollHeight;
+    };
+
+    const addTask = (type, label) => {
+      const task = {
+        id: 'task-' + Math.random().toString(36).substr(2, 5),
+        type: type,
+        label: label,
+        timer: type === 'http' ? 2 : (type === 'fs' ? 2 : 3),
+        state: 'pending'
+      };
+      simState.pendingTasks.push(task);
+      logToSim(`📥 Inbound trigger: <strong>${label}</strong> queued into memory.`, 'var(--text-primary)');
+      renderState();
+    };
+
+    const renderState = () => {
+      const stackDiv = document.getElementById('node-call-stack');
+      const stackStatus = document.getElementById('node-stack-status');
+      if (stackDiv) {
+        if (simState.callStack.length === 0) {
+          stackDiv.innerHTML = '<div style="color:var(--text-muted); font-size:0.7rem; text-align:center; padding-top:20px; width:100%;">Call Stack empty (Idle)</div>';
+          if (stackStatus) {
+            stackStatus.textContent = 'Idle';
+            stackStatus.style.color = 'var(--text-muted)';
+          }
+        } else {
+          stackDiv.innerHTML = simState.callStack.map(f => `
+            <div style="background:${f.type === 'http' ? 'rgba(99, 102, 241, 0.15)' : (f.type === 'fs' ? 'rgba(168, 85, 247, 0.15)' : 'rgba(234, 179, 8, 0.15)')}; border:1px solid ${f.type === 'http' ? 'var(--primary)' : (f.type === 'fs' ? 'var(--accent)' : 'var(--badge-yellow)')}; padding:6px 10px; border-radius:4px; font-size:0.72rem; text-align:center; font-family:var(--font-mono); font-weight:700; color:var(--text-primary);">
+              ${f.label}
+            </div>
+          `).join('');
+          if (stackStatus) {
+            stackStatus.textContent = 'Executing';
+            stackStatus.style.color = 'var(--accent)';
+          }
+        }
+      }
+
+      const socketsDiv = document.getElementById('node-os-sockets');
+      if (socketsDiv) {
+        if (simState.activeSockets.length === 0) {
+          socketsDiv.innerHTML = '<div style="color:var(--text-muted); font-size:0.7rem; text-align:center; width:100%;" id="node-no-sockets">No active network socket connections</div>';
+        } else {
+          socketsDiv.innerHTML = simState.activeSockets.map(s => `
+            <div style="padding:6px 10px; background:rgba(16,185,129,0.06); border:1px solid rgba(16,185,129,0.3); border-radius:6px; display:flex; justify-content:space-between; align-items:center; font-size:0.72rem; width:100%;">
+              <div style="display:flex; align-items:center; gap:6px;">
+                <span style="width:6px; height:6px; border-radius:50%; background:#10b981; display:inline-block;"></span>
+                <span style="font-weight:700; color:var(--text-primary); font-family:var(--font-mono);">${s.label}</span>
+              </div>
+              <span style="color:var(--text-secondary); font-size:0.65rem;">timeout: ${s.timer}t</span>
+            </div>
+          `).join('');
+        }
+      }
+
+      for (let i = 1; i <= 4; i++) {
+        const workerDiv = document.getElementById(`node-worker-${i}`);
+        if (workerDiv) {
+          const task = simState.activeWorkers[i - 1];
+          const taskLabelDiv = workerDiv.querySelector('.worker-task');
+          if (task) {
+            workerDiv.style.borderColor = task.type === 'fs' ? 'var(--accent)' : 'var(--badge-yellow)';
+            workerDiv.style.background = 'rgba(168, 85, 247, 0.05)';
+            if (taskLabelDiv) {
+              taskLabelDiv.innerHTML = `<span style="font-weight:bold; color:var(--text-primary); font-family:var(--font-mono);">${task.type.toUpperCase()} Thread</span><br><span style="font-size:0.55rem; color:var(--text-secondary);">t-rem: ${task.timer}t</span>`;
+            }
+          } else {
+            workerDiv.style.borderColor = 'var(--border-color)';
+            workerDiv.style.background = 'rgba(0,0,0,0.3)';
+            if (taskLabelDiv) {
+              taskLabelDiv.textContent = 'Idle';
+              taskLabelDiv.style.color = 'var(--text-muted)';
+            }
+          }
+        }
+      }
+
+      const queueDiv = document.getElementById('node-callback-queue');
+      const queueCountSpan = document.getElementById('node-queue-count');
+      if (queueDiv) {
+        if (simState.callbackQueue.length === 0) {
+          queueDiv.innerHTML = '<div style="color:var(--text-muted); font-size:0.7rem; width:100%; text-align:center;">Queue is empty</div>';
+        } else {
+          queueDiv.innerHTML = simState.callbackQueue.map(c => `
+            <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border-color); border-radius:4px; padding:4px 8px; font-size:0.68rem; font-family:var(--font-mono); font-weight:700; white-space:nowrap; color:var(--accent);">
+              ${c.label}
+            </div>
+          `).join('');
+        }
+      }
+      if (queueCountSpan) {
+        queueCountSpan.textContent = `${simState.callbackQueue.length} Items`;
+      }
+    };
+
+    const runNodeSimTick = () => {
+      simState.eventLoopAngle += 72;
+      const spinner = document.getElementById('node-event-loop-spinner');
+      if (spinner) {
+        spinner.style.transform = `rotate(${simState.eventLoopAngle}deg)`;
+      }
+      simState.eventLoopPhaseIndex = (simState.eventLoopPhaseIndex + 1) % simState.eventLoopPhases.length;
+      const phaseText = document.getElementById('node-loop-phase');
+      if (phaseText) {
+        phaseText.textContent = simState.eventLoopPhases[simState.eventLoopPhaseIndex];
+      }
+
+      // Decrement timers
+      simState.activeSockets.forEach(s => {
+        s.timer--;
+        if (s.timer <= 0) {
+          logToSim(`✔️ OS Network response received for: <strong>${s.label}</strong>. Callback pushed to Callback Queue.`, '#10b981');
+          simState.callbackQueue.push({ type: s.type, id: s.id, label: `cb_httpResponse` });
+        }
+      });
+      simState.activeSockets = simState.activeSockets.filter(s => s.timer > 0);
+
+      for (let i = 0; i < 4; i++) {
+        const task = simState.activeWorkers[i];
+        if (task) {
+          task.timer--;
+          if (task.timer <= 0) {
+            const cbName = task.type === 'fs' ? 'cb_fileRead' : 'cb_cryptoDone';
+            logToSim(`✔️ Worker Thread #${i + 1} completed blocked operation. Pushed <strong>${cbName}</strong> to Callback Queue.`, 'var(--accent)');
+            simState.callbackQueue.push({ type: task.type, id: task.id, label: cbName });
+            simState.activeWorkers[i] = null;
+          }
+        }
+      }
+
+      // Process Call Stack
+      if (simState.callStack.length > 0) {
+        const topFrame = simState.callStack[simState.callStack.length - 1];
+        
+        if (topFrame.state === 'stack-executing') {
+          if (topFrame.type === 'http') {
+            logToSim(`🚀 Main Thread executes Outbound HTTP request setup. Registering socket in OS kernel...`, 'var(--primary)');
+            simState.activeSockets.push({
+              id: topFrame.id,
+              type: 'http',
+              label: `socket_${topFrame.id}`,
+              timer: 2
+            });
+            simState.callStack.pop();
+            logToSim(`💨 Socket registered. Call Stack pops frame. Main thread remains UNBLOCKED!`, 'var(--text-secondary)');
+          } 
+          else if (topFrame.type === 'fs') {
+            const idleWorkerIndex = simState.activeWorkers.indexOf(null);
+            if (idleWorkerIndex !== -1) {
+              logToSim(`🚀 Main Thread executes blocking file call. Offloading task to <strong>Libuv Worker Thread #${idleWorkerIndex + 1}</strong>...`, 'var(--accent)');
+              topFrame.timer = 2;
+              simState.activeWorkers[idleWorkerIndex] = topFrame;
+              simState.callStack.pop();
+              logToSim(`💨 Task offloaded. Call Stack pops frame. Main thread remains UNBLOCKED!`, 'var(--text-secondary)');
+            } else {
+              logToSim(`⚠️ Worker threads busy. File read waiting in threadpool queues...`, 'var(--badge-yellow)');
+            }
+          } 
+          else if (topFrame.type === 'crypto') {
+            const idleWorkerIndex = simState.activeWorkers.indexOf(null);
+            if (idleWorkerIndex !== -1) {
+              logToSim(`🚀 Main Thread executes intensive CPU hashing. Offloading task to <strong>Libuv Worker Thread #${idleWorkerIndex + 1}</strong>...`, 'var(--badge-yellow)');
+              topFrame.timer = 3;
+              simState.activeWorkers[idleWorkerIndex] = topFrame;
+              simState.callStack.pop();
+              logToSim(`💨 Hashing delegated. Call Stack pops frame. Main thread remains UNBLOCKED!`, 'var(--text-secondary)');
+            } else {
+              logToSim(`⚠️ Worker threads busy. Hashing request waiting...`, 'var(--badge-yellow)');
+            }
+          } 
+          else {
+            logToSim(`🏁 Finished callback execution: <strong>${topFrame.label}</strong>. Pushed data to client/heap.`, 'var(--text-muted)');
+            simState.callStack.pop();
+          }
+        }
+      } 
+      else if (simState.callbackQueue.length > 0) {
+        const cb = simState.callbackQueue.shift();
+        logToSim(`🔄 Event Loop detects Call Stack is empty. Pushing <strong>${cb.label}</strong> to Call Stack for immediate single-threaded execution.`, 'var(--primary)');
+        cb.state = 'stack-executing';
+        simState.callStack.push(cb);
+      }
+      else if (simState.pendingTasks.length > 0) {
+        const pendingTask = simState.pendingTasks.shift();
+        logToSim(`📥 Main Thread grabs request: <strong>${pendingTask.label}</strong>. Pushing frame to stack.`, 'var(--text-primary)');
+        pendingTask.state = 'stack-executing';
+        simState.callStack.push(pendingTask);
+      }
+
+      renderState();
+    };
+
+    const startSimLoop = () => {
+      if (simState.tickInterval) clearInterval(simState.tickInterval);
+      simState.tickInterval = setInterval(runNodeSimTick, simState.simSpeed);
+      if (window.activeSimIntervals) {
+        window.activeSimIntervals.push(simState.tickInterval);
+      } else {
+        window.activeSimIntervals = [simState.tickInterval];
+      }
+    };
+
+    document.getElementById('btn-node-http').addEventListener('click', () => {
+      addTask('http', 'http.request("api.github.com/jaibharata")');
+    });
+
+    document.getElementById('btn-node-fs').addEventListener('click', () => {
+      addTask('fs', 'fs.readFile("index.html")');
+    });
+
+    document.getElementById('btn-node-crypto').addEventListener('click', () => {
+      addTask('crypto', 'crypto.pbkdf2(pwd, salt)');
+    });
+
+    document.getElementById('btn-node-clear').addEventListener('click', () => {
+      simState.pendingTasks = [];
+      simState.callStack = [];
+      simState.callbackQueue = [];
+      simState.activeSockets = [];
+      simState.activeWorkers = [null, null, null, null];
+      logToSim(`🧹 Simulation states fully reset. Thread heap and socket registers cleared.`, 'var(--text-muted)');
+      renderState();
+    });
+
+    document.getElementById('btn-node-clear-console').addEventListener('click', () => {
+      const consoleDiv = document.getElementById('node-console');
+      if (consoleDiv) consoleDiv.innerHTML = '<div style="color:var(--text-muted);">Console logs cleared. Ready for execution ticks.</div>';
+    });
+
+    const speedSelect = document.getElementById('node-sim-speed');
+    if (speedSelect) {
+      speedSelect.addEventListener('change', (e) => {
+        simState.simSpeed = parseInt(e.target.value);
+        logToSim(`⚡ Speed adjusted to ${simState.simSpeed}ms.`, 'var(--text-secondary)');
+        startSimLoop();
+      });
+    }
+
+    const autoBtn = document.getElementById('btn-node-auto');
+    if (autoBtn) {
+      autoBtn.addEventListener('click', () => {
+        if (simState.isAutoInjecting) {
+          clearInterval(simState.autoInjectInterval);
+          simState.autoInjectInterval = null;
+          simState.isAutoInjecting = false;
+          autoBtn.textContent = '▶️ Auto-Inject Traffic';
+          autoBtn.classList.remove('btn-danger');
+          logToSim(`⏹️ Auto-injection of client traffic stopped.`, 'var(--text-secondary)');
+        } else {
+          simState.isAutoInjecting = true;
+          autoBtn.textContent = '⏹️ Stop Traffic';
+          autoBtn.classList.add('btn-danger');
+          logToSim(`▶️ Auto-injection of client traffic started. Simulating random inbound user requests...`, 'var(--accent)');
+          
+          simState.autoInjectInterval = setInterval(() => {
+            const types = ['http', 'fs', 'crypto'];
+            const randomType = types[Math.floor(Math.random() * types.length)];
+            if (randomType === 'http') {
+              addTask('http', `HTTP GET /api/resource-${Math.floor(Math.random() * 100)}`);
+            } else if (randomType === 'fs') {
+              addTask('fs', `fs.readFile("file-${Math.floor(Math.random() * 5)}.txt")`);
+            } else {
+              addTask('crypto', `crypto.scrypt("pwd-${Math.floor(Math.random() * 10)}")`);
+            }
+          }, 3000);
+
+          if (window.activeSimIntervals) {
+            window.activeSimIntervals.push(simState.autoInjectInterval);
+          } else {
+            window.activeSimIntervals = [simState.autoInjectInterval];
+          }
+        }
+      });
+    }
+
+    startSimLoop();
+    renderState();
   }
 
   // ==========================================
